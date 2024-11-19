@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import warnings
 import seaborn as sns
 import plotly.express as px
+import zipfile
+
 
 st.logo(
     "TopTen_Stays/Miuul Final Project/Images/Icon1.png", size="large",
@@ -68,10 +70,16 @@ data_tab.subheader(
 @st.cache_data
 def get_data(nation_x = ["United Kingdom"]):
 
-    df1 =pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews1.xlsx")
-    df2 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews2.xlsx")
-    df3 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews3.xlsx")
-
+    zip_file_path = "TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews.zip"
+    extract_path = "TopTen_Stays/Miuul Final Project/Datasets/"
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_path)
+    file_path1 = f"{extract_path}Hotel_Reviews1.csv"
+    file_path2 = f"{extract_path}Hotel_Reviews2.csv"
+    file_path3 = f"{extract_path}Hotel_Reviews3.csv"
+    df1 = pd.read_csv(file_path1)
+    df2 = pd.read_csv(file_path2)
+    df3 = pd.read_csv(file_path3)
     df = pd.concat([df1, df2, df3], ignore_index=True)
 
     scaler = MinMaxScaler(feature_range=(0, 5))
@@ -276,10 +284,16 @@ data_tab.plotly_chart(fig1, use_container_width=True)
 ####recomandations_tab####
 @st.cache_data
 def get_data_1():
-    df1 =pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews1.xlsx")
-    df2 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews2.xlsx")
-    df3 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews3.xlsx")
-
+    zip_file_path = "TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews.zip"
+    extract_path = "TopTen_Stays/Miuul Final Project/Datasets/"
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_path)
+    file_path1 = f"{extract_path}Hotel_Reviews1.csv"
+    file_path2 = f"{extract_path}Hotel_Reviews2.csv"
+    file_path3 = f"{extract_path}Hotel_Reviews3.csv"
+    df1 = pd.read_csv(file_path1)
+    df2 = pd.read_csv(file_path2)
+    df3 = pd.read_csv(file_path3)
     df = pd.concat([df1, df2, df3], ignore_index=True)
 
     scaler = MinMaxScaler(feature_range=(0, 5))
@@ -420,10 +434,16 @@ df_1 = get_data_1()
 
 @st.cache_data
 def df_Creator_for_nation():
-    df1 =pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews1.xlsx")
-    df2 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews2.xlsx")
-    df3 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews3.xlsx")
-
+    zip_file_path = "TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews.zip"
+    extract_path = "TopTen_Stays/Miuul Final Project/Datasets/"
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_path)
+    file_path1 = f"{extract_path}Hotel_Reviews1.csv"
+    file_path2 = f"{extract_path}Hotel_Reviews2.csv"
+    file_path3 = f"{extract_path}Hotel_Reviews3.csv"
+    df1 = pd.read_csv(file_path1)
+    df2 = pd.read_csv(file_path2)
+    df3 = pd.read_csv(file_path3)
     df = pd.concat([df1, df2, df3], ignore_index=True)
 
     df["Reviewer_Nationality"] = df["Reviewer_Nationality"].str.strip().str.strip("'\"")
