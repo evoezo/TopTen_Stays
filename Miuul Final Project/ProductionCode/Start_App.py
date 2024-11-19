@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import warnings
 import seaborn as sns
 import plotly.express as px
-import zipfile
 
 
 st.logo(
@@ -69,18 +68,9 @@ data_tab.subheader(
 
 @st.cache_data
 def get_data(nation_x = ["United Kingdom"]):
-
-    zip_file_path = "TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews.zip"
-    extract_path = "TopTen_Stays/Miuul Final Project/Datasets/"
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_path)
-    file_path1 = f"{extract_path}Hotel_Reviews1.csv"
-    file_path2 = f"{extract_path}Hotel_Reviews2.csv"
-    file_path3 = f"{extract_path}Hotel_Reviews3.csv"
-    df1 = pd.read_csv(file_path1)
-    df2 = pd.read_csv(file_path2)
-    df3 = pd.read_csv(file_path3)
-    df = pd.concat([df1, df2, df3], ignore_index=True)
+    df = pd.read_csv("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews1.csv")
+    df = df.drop(columns=["Review_Date", "Review_Total_Negative_Word_Counts", "Review_Total_Positive_Word_Counts",
+                          "Total_Number_of_Reviews_Reviewer_Has_Given","Tags" , "lat", "lng"], axis=1)
 
     scaler = MinMaxScaler(feature_range=(0, 5))
     df['Reviewer_Score'] = scaler.fit_transform(df[['Reviewer_Score']])
@@ -284,17 +274,9 @@ data_tab.plotly_chart(fig1, use_container_width=True)
 ####recomandations_tab####
 @st.cache_data
 def get_data_1():
-    zip_file_path = "TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews.zip"
-    extract_path = "TopTen_Stays/Miuul Final Project/Datasets/"
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_path)
-    file_path1 = f"{extract_path}Hotel_Reviews1.csv"
-    file_path2 = f"{extract_path}Hotel_Reviews2.csv"
-    file_path3 = f"{extract_path}Hotel_Reviews3.csv"
-    df1 = pd.read_csv(file_path1)
-    df2 = pd.read_csv(file_path2)
-    df3 = pd.read_csv(file_path3)
-    df = pd.concat([df1, df2, df3], ignore_index=True)
+    df = pd.read_csv("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews1.csv")
+    df = df.drop(columns=["Review_Date", "Review_Total_Negative_Word_Counts", "Review_Total_Positive_Word_Counts",
+                          "Total_Number_of_Reviews_Reviewer_Has_Given","Tags" , "lat", "lng"], axis=1)
 
     scaler = MinMaxScaler(feature_range=(0, 5))
     df['Reviewer_Score'] = scaler.fit_transform(df[['Reviewer_Score']])
@@ -434,17 +416,9 @@ df_1 = get_data_1()
 
 @st.cache_data
 def df_Creator_for_nation():
-    zip_file_path = "TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews.zip"
-    extract_path = "TopTen_Stays/Miuul Final Project/Datasets/"
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_path)
-    file_path1 = f"{extract_path}Hotel_Reviews1.csv"
-    file_path2 = f"{extract_path}Hotel_Reviews2.csv"
-    file_path3 = f"{extract_path}Hotel_Reviews3.csv"
-    df1 = pd.read_csv(file_path1)
-    df2 = pd.read_csv(file_path2)
-    df3 = pd.read_csv(file_path3)
-    df = pd.concat([df1, df2, df3], ignore_index=True)
+    df = pd.read_csv("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews1.csv")
+    df = df.drop(columns=["Review_Date", "Review_Total_Negative_Word_Counts", "Review_Total_Positive_Word_Counts",
+                          "Total_Number_of_Reviews_Reviewer_Has_Given","Tags" , "lat", "lng"], axis=1)
 
     df["Reviewer_Nationality"] = df["Reviewer_Nationality"].str.strip().str.strip("'\"")
     return df
