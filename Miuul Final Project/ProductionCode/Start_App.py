@@ -1,5 +1,4 @@
 import streamlit as st
-#  streamlit run Kaggle_Hotel/Start.py
 import pandas as pd
 import numpy as np
 import math
@@ -11,17 +10,16 @@ import seaborn as sns
 import plotly.express as px
 
 st.logo(
-    "Kaggle_Hotel/Görsel/icon1.png", size="large",
-    icon_image="Kaggle_Hotel/Görsel/icon_s_1.png"
-)
-#layout="wide"
+    "TopTen_Stays/Miuul Final Project/Images/Icon1.png", size="large",
+    icon_image="TopTen_Stays/Miuul Final Project/Images/Icon2.png")
+
 st.set_page_config(layout="wide", page_title="TopTen Stays", page_icon="🏨")
 st.title(":orange[TopTen Stays]🥂🌇")
 home_tab, data_tab, recomandations_tab = st.tabs(["Home", "Data", "Recomandations"])
-Empty_1, image_left, image_right, Empty_2 = home_tab.columns([4,6,5,4], gap="small")
+Empty_1, image_left, image_right, Empty_2 = home_tab.columns([4, 6, 5, 4], gap="small")
 
-image_left.image("Kaggle_Hotel/Görsel/dikdötgen.png",width=360)
-image_right.image("Kaggle_Hotel/Görsel/karcik.png",width=450)
+image_left.image("TopTen_Stays/Miuul Final Project/Images/Image1.png", width=360)
+image_right.image("TopTen_Stays/Miuul Final Project/Images/Image2.png", width=450)
 image_right.subheader(":orange[  Discover the top 10 hotels in the 6 best capitals of Europe!]")
 image_right.markdown(""" 
 
@@ -32,15 +30,15 @@ Whether you're looking for accommodations rated by travelers from your own count
 For trips to the **_United Kingdom, Spain, France, the Netherlands, Austria, or Italy_**, we’ll recommend the top 10 hotels in each capital to make your stay unforgettable.
 
 """)
-image_right.image("Kaggle_Hotel/Görsel/toplar.png",width=400)
-
+image_right.image("TopTen_Stays/Miuul Final Project/Images/Image3.png", width=400)
 
 # Başlık ve kısa tanıtım
 st.sidebar.title(":orange[Discover Your Ideal Stay!] 🌍")
 st.sidebar.markdown("Explore top-rated hotels across Europe’s best destinations.")
 
 # Bilgilendirici görsel
-st.sidebar.image("Kaggle_Hotel/Görsel/otel.png", caption="Find the best hotels for an unforgettable stay.", use_container_width=True)
+st.sidebar.image("TopTen_Stays/Miuul Final Project/Images/Image4.png", caption="Find the best hotels for an unforgettable stay.",
+                 use_container_width=True)
 
 # Popüler Destinasyonlar
 st.sidebar.markdown("### Top Destinations")
@@ -63,28 +61,34 @@ st.sidebar.info(
 ####_Data_Tab_####
 
 
-data_tab.subheader("This dataset contains 515,000 customer reviews and scoring of 1493 luxury hotels across Europe. After processing the available data, here is the list of the top 10 hotels selected from each of the 6 countries.")
+data_tab.subheader(
+    "This dataset contains 515,000 customer reviews and scoring of 1493 luxury hotels across Europe. After processing the available data, here is the list of the top 10 hotels selected from each of the 6 countries.")
+
 
 @st.cache_data
 def get_data(nation_x = ["United Kingdom"]):
-    df = pd.read_csv("Kaggle_Hotel/Hotel_Reviews.csv")
-    df = df.drop(columns=["Review_Date", "Review_Total_Negative_Word_Counts", "Review_Total_Positive_Word_Counts",
-                          "Total_Number_of_Reviews_Reviewer_Has_Given","Tags" , "lat", "lng"], axis=1)
+
+    df1 =pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews1.xlsx")
+    df2 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews2.xlsx")
+    df3 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews3.xlsx")
+
+    df = pd.concat([df1, df2, df3], ignore_index=True)
 
     scaler = MinMaxScaler(feature_range=(0, 5))
     df['Reviewer_Score'] = scaler.fit_transform(df[['Reviewer_Score']])
     df['Average_Score'] = scaler.fit_transform(df[['Average_Score']])
 
     df["days_since_review"] = (df["days_since_review"]
-                               .str.replace(" days", "")
-                               .str.replace(" day", "")
-                               .astype(int))
+                           .str.replace(" days", "")
+                           .str.replace(" day", "")
+                           .astype(int))
 
     df["summary_min"] = df.groupby("Hotel_Name")["days_since_review"].transform("min")
     df["summary_q1"] = df.groupby("Hotel_Name")["days_since_review"].transform(lambda x: x.quantile(0.25))
     df["summary_q2"] = df.groupby("Hotel_Name")["days_since_review"].transform("median")
     df["summary_q3"] = df.groupby("Hotel_Name")["days_since_review"].transform(lambda x: x.quantile(0.75))
     df["summary_max"] = df.groupby("Hotel_Name")["days_since_review"].transform("max")
+
 
     def weighted_average_by_time(df_group):
         q1, q2, q3 = df_group["summary_q1"].iloc[0], df_group["summary_q2"].iloc[0], df_group["summary_q3"].iloc[0]
@@ -99,11 +103,12 @@ def get_data(nation_x = ["United Kingdom"]):
         )
         return weighted_avg
 
-    hotel_weighted_averages = df.groupby("Hotel_Name").apply(weighted_average_by_time).reset_index(
-        name="Recent_Feedback_Score")
+
+    hotel_weighted_averages = df.groupby("Hotel_Name").apply(weighted_average_by_time).reset_index(name="Recent_Feedback_Score")
     df = df.merge(hotel_weighted_averages, on="Hotel_Name", how="left")
 
     df["Reviewer_Nationality"] = df["Reviewer_Nationality"].str.strip().str.strip("'\"")
+
 
     def weighted_national(df_group, nation):
         selected_nation_score = df_group.loc[df_group["Reviewer_Nationality"].isin(nation), "Reviewer_Score"].mean()
@@ -112,9 +117,9 @@ def get_data(nation_x = ["United Kingdom"]):
 
         return weighted_avg
 
+
     hotel_weighted_averages_by_nation = df.groupby("Hotel_Name").apply(weighted_national,
-                                                                       nation_x).reset_index(
-        name="Nation_Based_Weighted_Score")
+                                                                   nation_x).reset_index(name="Nation_Based_Weighted_Score")
 
     df = df.merge(hotel_weighted_averages_by_nation, on="Hotel_Name", how="left")
 
@@ -125,17 +130,15 @@ def get_data(nation_x = ["United Kingdom"]):
     df = pd.get_dummies(df, columns=['Final_star'], prefix='Star', dtype="int64")
 
     df['Negative_Review'] = df['Negative_Review'].replace([
-        'Non', 'No', 'None', 'NA', 'Nothing', 'Nothin', 'Nothinb', 'Nothibg', 'Nothings', 'NOTHNG',
-        'Nothink', 'Nothig', 'Nothingseccess', 'Nothimg', 'Nothinh', 'Nothg', 'Nothing7', 'Nothinge',
-        'Notheng', 'Nothhing', 'Nothong', 'Nothjng', 'Nothingefs', 'Nothjnng', 'Nothingg', 'Nothung',
-        'Nothinf', 'Nothingthe', 'NothingA', 'Nothiing', 'NOTHINGGGGGG', 'nothging', 'Nothting',
-        'nothingone', 'Nothubg', 'Nothjg', 'NothingGra', 'Noththing', 'Nothening', 'NothingGreat',
-        'Nothingreally', 'Nothlng'
-    ], 'No Negative')
+    'Non', 'No', 'None', 'NA', 'Nothing', 'Nothin', 'Nothinb', 'Nothibg', 'Nothings', 'NOTHNG',
+    'Nothink', 'Nothig', 'Nothingseccess', 'Nothimg', 'Nothinh', 'Nothg', 'Nothing7', 'Nothinge',
+    'Notheng', 'Nothhing', 'Nothong', 'Nothjng', 'Nothingefs', 'Nothjnng', 'Nothingg', 'Nothung',
+    'Nothinf', 'Nothingthe', 'NothingA', 'Nothiing', 'NOTHINGGGGGG', 'nothging', 'Nothting',
+    'nothingone', 'Nothubg', 'Nothjg', 'NothingGra', 'Noththing', 'Nothening', 'NothingGreat',
+    'Nothingreally', 'Nothlng'], 'No Negative')
 
     df['Positive_Review'] = df['Positive_Review'].replace([
-        'nothing', 'Nothink', 'Nothin', 'Nothings', 'Not', 'Notjing', 'Nothng', 'NA', 'Na', 'nathing'
-    ], 'No Positive')
+    'nothing', 'Nothink', 'Nothin', 'Nothings', 'Not', 'Notjing', 'Nothng', 'NA', 'Na', 'nathing'], 'No Positive')
 
     df['Negative_Flag'] = df['Negative_Review'].apply(lambda x: 0 if x == 'No Negative' else 1)
     df['Positive_Flag'] = df['Positive_Review'].apply(lambda x: 0 if x == 'No Positive' else 1)
@@ -143,13 +146,12 @@ def get_data(nation_x = ["United Kingdom"]):
     df = df[df['Total_count'] != 0]
 
     df_grouped = (df.groupby("Hotel_Name").agg(
-        Negative_Review=("Negative_Flag", "sum"),
-        Positive_Review=("Positive_Flag", "sum"))
-                  .sort_values(by="Positive_Review", ascending=False)
-                  ).reset_index()
+     Negative_Review=("Negative_Flag", "sum"),
+     Positive_Review=("Positive_Flag", "sum"))
+               .sort_values(by="Positive_Review", ascending=False)).reset_index()
 
     df_grouped['Positive_Ratio'] = df_grouped['Positive_Review'] / (
-                df_grouped['Negative_Review'] + df_grouped['Positive_Review'])
+          df_grouped['Negative_Review'] + df_grouped['Positive_Review'])
     df = df.merge(df_grouped, on="Hotel_Name", how="left")
 
     Final_df = (
@@ -167,10 +169,7 @@ def get_data(nation_x = ["United Kingdom"]):
             Negative_Review=("Negative_Flag", "sum"),
             Positive_Review=("Positive_Flag", "sum"),
             Positive_Ratio=("Positive_Ratio", 'first')
-        )
-        .sort_values(by="Recent_Feedback_Score", ascending=False)
-        .reset_index()
-    )
+        ).sort_values(by="Recent_Feedback_Score", ascending=False).reset_index())
 
     Final_df["Comment_Count_Score"] = Final_df["Total_Number_of_Reviews"] - Final_df["Negative_Review"] + Final_df[
         "Positive_Review"]
@@ -178,15 +177,18 @@ def get_data(nation_x = ["United Kingdom"]):
     scaler = MinMaxScaler(feature_range=(1, 5))
     Final_df["Comment_Count_Score"] = scaler.fit_transform(Final_df[["Log_Comment_Count_Score"]])
 
+
     def weighted_sorting_score(dataframe, w1=30, w2=70, ):
         return (dataframe["Comment_Count_Score"] * w1 / 100 +
                 dataframe["Nation_Based_Weighted_Score"] * w2 / 100)
 
+
     Final_df["weighted_sorting_score"] = weighted_sorting_score(Final_df)
+
 
     def bayesian_average_rating(n, confidence=0.95):
         if sum(n) == 0:
-            return 0
+           return 0
         K = len(n)
         z = sct.norm.ppf(1 - (1 - confidence) / 2)
         N = sum(n)
@@ -198,36 +200,38 @@ def get_data(nation_x = ["United Kingdom"]):
         score = first_part - z * math.sqrt((second_part - first_part * first_part) / (N + K + 1))
         return score
 
+
     Final_df["bar_score"] = Final_df.apply(lambda x: bayesian_average_rating(x[["Star_1",
-                                                                                "Star_2",
-                                                                                "Star_3",
-                                                                                "Star_4",
-                                                                                "Star_5"]]), axis=1)
+                                                                            "Star_2",
+                                                                            "Star_3",
+                                                                            "Star_4",
+                                                                            "Star_5"]]), axis=1)
+
 
     def hybrid_sorting_score(dataframe, bar_w=60, wss_w=40):
         bar_score = dataframe.apply(lambda x: bayesian_average_rating(x[["Star_1",
-                                                                         "Star_2",
-                                                                         "Star_3",
-                                                                         "Star_4",
-                                                                         "Star_5"]]), axis=1)
+                                                                        "Star_2",
+                                                                        "Star_3",
+                                                                        "Star_4",
+                                                                        "Star_5"]]), axis=1)
         wss_score = weighted_sorting_score(dataframe)
 
         return (bar_score * bar_w / 100) + (wss_score * wss_w / 100)
+
 
     Final_df["hybrid_sorting_score"] = hybrid_sorting_score(Final_df)
 
     Final_df['Country_name'] = Final_df['Hotel_Address'].apply(
         lambda x: 'United Kingdom' if 'United Kingdom' in x else x.split()[-1])
 
-
     return Final_df
 
-df= get_data()
+df = get_data()
 df_first10 = df.head(10).sort_values('hybrid_sorting_score', ascending=False).reset_index(drop=True)
 data_tab.dataframe(df_first10)
 
 data_tab.title("Hotel Data Visualizations")
-graph1, grap2 = data_tab.columns([2,2], gap="small")
+graph1, grap2 = data_tab.columns([2, 2], gap="small")
 
 graph1.subheader("Number of Hotels by Country")
 plt.figure(figsize=(5, 4))
@@ -259,37 +263,40 @@ plt.xticks(rotation=90, fontsize=8)
 plt.yticks(fontsize=8)
 grap2.pyplot(plt.gcf())
 
-#graph 3
+# graph 3
 fig1 = px.scatter(df,
-                  x= "Total_Number_of_Reviews",
-                  y= "Positive_Ratio",
-                  color= "Country_name",
-                  title= "Hotel Ratings and Their Positive Feedback Ratios",
-                  hover_data=["Hotel_Name","hybrid_sorting_score"])
+                  x="Total_Number_of_Reviews",
+                  y="Positive_Ratio",
+                  color="Country_name",
+                  title="Hotel Ratings and Their Positive Feedback Ratios",
+                  hover_data=["Hotel_Name", "hybrid_sorting_score"])
 data_tab.plotly_chart(fig1, use_container_width=True)
 
 
 ####recomandations_tab####
 @st.cache_data
 def get_data_1():
-    df = pd.read_csv("Kaggle_Hotel/Hotel_Reviews.csv")
-    df = df.drop(columns=["Review_Date", "Review_Total_Negative_Word_Counts", "Review_Total_Positive_Word_Counts",
-                          "Total_Number_of_Reviews_Reviewer_Has_Given","Tags" , "lat", "lng"], axis=1)
+    df1 =pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews1.xlsx")
+    df2 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews2.xlsx")
+    df3 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews3.xlsx")
+
+    df = pd.concat([df1, df2, df3], ignore_index=True)
 
     scaler = MinMaxScaler(feature_range=(0, 5))
     df['Reviewer_Score'] = scaler.fit_transform(df[['Reviewer_Score']])
     df['Average_Score'] = scaler.fit_transform(df[['Average_Score']])
 
     df["days_since_review"] = (df["days_since_review"]
-                               .str.replace(" days", "")
-                               .str.replace(" day", "")
-                               .astype(int))
+                            .str.replace(" days", "")
+                            .str.replace(" day", "")
+                            .astype(int))
 
     df["summary_min"] = df.groupby("Hotel_Name")["days_since_review"].transform("min")
     df["summary_q1"] = df.groupby("Hotel_Name")["days_since_review"].transform(lambda x: x.quantile(0.25))
     df["summary_q2"] = df.groupby("Hotel_Name")["days_since_review"].transform("median")
     df["summary_q3"] = df.groupby("Hotel_Name")["days_since_review"].transform(lambda x: x.quantile(0.75))
     df["summary_max"] = df.groupby("Hotel_Name")["days_since_review"].transform("max")
+
 
     def weighted_average_by_time(df_group):
         q1, q2, q3 = df_group["summary_q1"].iloc[0], df_group["summary_q2"].iloc[0], df_group["summary_q3"].iloc[0]
@@ -304,10 +311,9 @@ def get_data_1():
         )
         return weighted_avg
 
-    hotel_weighted_averages = df.groupby("Hotel_Name").apply(weighted_average_by_time).reset_index(
-        name="Recent_Feedback_Score")
-    df = df.merge(hotel_weighted_averages, on="Hotel_Name", how="left")
 
+    hotel_weighted_averages = df.groupby("Hotel_Name").apply(weighted_average_by_time).reset_index(name="Recent_Feedback_Score")
+    df = df.merge(hotel_weighted_averages, on="Hotel_Name", how="left")
 
     bins = [0, 1, 2, 3, 4, 6]
     labels = [1, 2, 3, 4, 5]
@@ -316,17 +322,15 @@ def get_data_1():
     df = pd.get_dummies(df, columns=['Final_star'], prefix='Star', dtype="int64")
 
     df['Negative_Review'] = df['Negative_Review'].replace([
-        'Non', 'No', 'None', 'NA', 'Nothing', 'Nothin', 'Nothinb', 'Nothibg', 'Nothings', 'NOTHNG',
-        'Nothink', 'Nothig', 'Nothingseccess', 'Nothimg', 'Nothinh', 'Nothg', 'Nothing7', 'Nothinge',
-        'Notheng', 'Nothhing', 'Nothong', 'Nothjng', 'Nothingefs', 'Nothjnng', 'Nothingg', 'Nothung',
-        'Nothinf', 'Nothingthe', 'NothingA', 'Nothiing', 'NOTHINGGGGGG', 'nothging', 'Nothting',
-        'nothingone', 'Nothubg', 'Nothjg', 'NothingGra', 'Noththing', 'Nothening', 'NothingGreat',
-        'Nothingreally', 'Nothlng'
-    ], 'No Negative')
+    'Non', 'No', 'None', 'NA', 'Nothing', 'Nothin', 'Nothinb', 'Nothibg', 'Nothings', 'NOTHNG',
+    'Nothink', 'Nothig', 'Nothingseccess', 'Nothimg', 'Nothinh', 'Nothg', 'Nothing7', 'Nothinge',
+    'Notheng', 'Nothhing', 'Nothong', 'Nothjng', 'Nothingefs', 'Nothjnng', 'Nothingg', 'Nothung',
+    'Nothinf', 'Nothingthe', 'NothingA', 'Nothiing', 'NOTHINGGGGGG', 'nothging', 'Nothting',
+    'nothingone', 'Nothubg', 'Nothjg', 'NothingGra', 'Noththing', 'Nothening', 'NothingGreat',
+    'Nothingreally', 'Nothlng'], 'No Negative')
 
     df['Positive_Review'] = df['Positive_Review'].replace([
-        'nothing', 'Nothink', 'Nothin', 'Nothings', 'Not', 'Notjing', 'Nothng', 'NA', 'Na', 'nathing'
-    ], 'No Positive')
+    'nothing', 'Nothink', 'Nothin', 'Nothings', 'Not', 'Notjing', 'Nothng', 'NA', 'Na', 'nathing'], 'No Positive')
 
     df['Negative_Flag'] = df['Negative_Review'].apply(lambda x: 0 if x == 'No Negative' else 1)
     df['Positive_Flag'] = df['Positive_Review'].apply(lambda x: 0 if x == 'No Positive' else 1)
@@ -335,12 +339,10 @@ def get_data_1():
 
     df_grouped = (df.groupby("Hotel_Name").agg(
         Negative_Review=("Negative_Flag", "sum"),
-        Positive_Review=("Positive_Flag", "sum"))
-                  .sort_values(by="Positive_Review", ascending=False)
-                  ).reset_index()
+        Positive_Review=("Positive_Flag", "sum")).sort_values(by="Positive_Review", ascending=False)).reset_index()
 
     df_grouped['Positive_Ratio'] = df_grouped['Positive_Review'] / (
-                df_grouped['Negative_Review'] + df_grouped['Positive_Review'])
+            df_grouped['Negative_Review'] + df_grouped['Positive_Review'])
     df = df.merge(df_grouped, on="Hotel_Name", how="left")
 
     Final_df = (
@@ -356,11 +358,7 @@ def get_data_1():
             Star_5=('Star_5', 'sum'),
             Negative_Review=("Negative_Flag", "sum"),
             Positive_Review=("Positive_Flag", "sum"),
-            Positive_Ratio=("Positive_Ratio", 'first')
-        )
-        .sort_values(by="Recent_Feedback_Score", ascending=False)
-        .reset_index()
-    )
+            Positive_Ratio=("Positive_Ratio", 'first')).sort_values(by="Recent_Feedback_Score", ascending=False).reset_index())
 
     Final_df["Comment_Count_Score"] = Final_df["Total_Number_of_Reviews"] - Final_df["Negative_Review"] + Final_df[
         "Positive_Review"]
@@ -368,11 +366,14 @@ def get_data_1():
     scaler = MinMaxScaler(feature_range=(1, 5))
     Final_df["Comment_Count_Score"] = scaler.fit_transform(Final_df[["Log_Comment_Count_Score"]])
 
+
     def weighted_sorting_score(dataframe, w1=30, w2=70, ):
         return (dataframe["Comment_Count_Score"] * w1 / 100 +
                 dataframe["Recent_Feedback_Score"] * w2 / 100)
 
+
     Final_df["weighted_sorting_score"] = weighted_sorting_score(Final_df)
+
 
     def bayesian_average_rating(n, confidence=0.95):
         if sum(n) == 0:
@@ -388,46 +389,52 @@ def get_data_1():
         score = first_part - z * math.sqrt((second_part - first_part * first_part) / (N + K + 1))
         return score
 
+
     Final_df["bar_score"] = Final_df.apply(lambda x: bayesian_average_rating(x[["Star_1",
-                                                                                "Star_2",
-                                                                                "Star_3",
-                                                                                "Star_4",
-                                                                                "Star_5"]]), axis=1)
+                                                                            "Star_2",
+                                                                            "Star_3",
+                                                                            "Star_4",
+                                                                            "Star_5"]]), axis=1)
+
 
     def hybrid_sorting_score(dataframe, bar_w=60, wss_w=40):
         bar_score = dataframe.apply(lambda x: bayesian_average_rating(x[["Star_1",
-                                                                         "Star_2",
-                                                                         "Star_3",
-                                                                         "Star_4",
-                                                                         "Star_5"]]), axis=1)
+                                                                     "Star_2",
+                                                                     "Star_3",
+                                                                     "Star_4",
+                                                                     "Star_5"]]), axis=1)
         wss_score = weighted_sorting_score(dataframe)
 
         return (bar_score * bar_w / 100) + (wss_score * wss_w / 100)
+
 
     Final_df["hybrid_sorting_score"] = hybrid_sorting_score(Final_df)
 
     Final_df['Country_name'] = Final_df['Hotel_Address'].apply(
         lambda x: 'United Kingdom' if 'United Kingdom' in x else x.split()[-1])
 
-
     return Final_df
 
-df_1= get_data_1()
+df_1 = get_data_1()
+
 
 @st.cache_data
-def df_Creator_for_nation ():
-    df = pd.read_csv("Kaggle_Hotel/Hotel_Reviews.csv")
-    df = df.drop(columns=["Review_Date", "Review_Total_Negative_Word_Counts", "Review_Total_Positive_Word_Counts",
-                          "Total_Number_of_Reviews_Reviewer_Has_Given", "lat", "lng"], axis=1)
+def df_Creator_for_nation():
+    df1 =pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews1.xlsx")
+    df2 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews2.xlsx")
+    df3 = pd.read_excel("TopTen_Stays/Miuul Final Project/Datasets/Hotel_Reviews3.xlsx")
+
+    df = pd.concat([df1, df2, df3], ignore_index=True)
+
     df["Reviewer_Nationality"] = df["Reviewer_Nationality"].str.strip().str.strip("'\"")
     return df
 
 df_reviews = df_Creator_for_nation()
 country_counts_head = (df_reviews["Reviewer_Nationality"]
-                           .value_counts()
-                           .sort_values(ascending=False)
-                           .head(30)
-                           .reset_index())
+                       .value_counts()
+                       .sort_values(ascending=False)
+                       .head(30)
+                       .reset_index())
 
 
 @st.cache_data
@@ -435,7 +442,6 @@ def top_10_hotels_by_country_filtered(dataframe, Country_name, nation_selected=F
     # Ülkeye göre filtreleme
     Country_hotels = dataframe[dataframe['Country_name'] == Country_name]
 
-    # Eğer nation seçildiyse, Nation_Based_Weighted_Score sütunu dahil edilir
     if nation_selected:
         selected_columns = [
             "Hotel_Name", 'Hotel_Address', 'Nation_Based_Weighted_Score',
@@ -451,13 +457,10 @@ def top_10_hotels_by_country_filtered(dataframe, Country_name, nation_selected=F
 
     top_10_hotels = Country_hotels[selected_columns].sort_values(by="hybrid_sorting_score", ascending=False).head(10)
 
-
-    # Yuvarlama işlemi
     if 'Nation_Based_Weighted_Score' in top_10_hotels.columns:
         top_10_hotels['Nation_Based_Weighted_Score'] = top_10_hotels['Nation_Based_Weighted_Score'].round(2)
     top_10_hotels['hybrid_sorting_score'] = top_10_hotels['hybrid_sorting_score'].round(2)
 
-    # Sütun isimlerini değiştirme
     rename_columns = {
         "Hotel_Name": "Hotel Name",
         'Hotel_Address': 'Address',
@@ -468,26 +471,23 @@ def top_10_hotels_by_country_filtered(dataframe, Country_name, nation_selected=F
         'hybrid_sorting_score': 'Score',
         'Country_name': 'Country'
     }
-    # Mevcut sütunlarla eşleşen sütunları yeniden adlandır
-    top_10_hotels = top_10_hotels.rename(columns={k: v for k, v in rename_columns.items() if k in top_10_hotels.columns})
 
-    # Reset index ve ardından 1'den başlat
+    top_10_hotels = top_10_hotels.rename(
+        columns={k: v for k, v in rename_columns.items() if k in top_10_hotels.columns})
+
     top_10_hotels.reset_index(drop=True, inplace=True)
     top_10_hotels.index = top_10_hotels.index + 1
 
     return top_10_hotels
 
 
-
-
-# Kullanıcı seçimleri
 user_selected_nation = recomandations_tab.selectbox(
     "Select a nation",
     options=["All Nations"] + country_counts_head.Reviewer_Nationality.unique().tolist()
 )
 
 if user_selected_nation == "All Nations":
-    user_selected_nation = None  # "All Nations" seçilmişse nation seçimini devre dışı bırak
+    user_selected_nation = None
 
 user_selected_country = recomandations_tab.selectbox("Select a country",
                                                      options=df
@@ -495,8 +495,7 @@ user_selected_country = recomandations_tab.selectbox("Select a country",
                                                      .unique())
 
 if recomandations_tab.button("List Hotels", use_container_width=True, icon="🥂"):
-    if user_selected_nation:  # Eğer bir nation seçilmişse
-        # Kullanıcının seçtiği ülkeye ve nation'a göre filtrele
+    if user_selected_nation:
         df_reviews_filtered = get_data(nation_x=[user_selected_nation])
         top_hotels = top_10_hotels_by_country_filtered(
             df_reviews_filtered,
@@ -504,21 +503,12 @@ if recomandations_tab.button("List Hotels", use_container_width=True, icon="🥂
             nation_selected=True)
 
     else:
-        # Nation seçilmemişse tüm datayı al
         df_reviews_filtered = df_1.copy()
         top_hotels = top_10_hotels_by_country_filtered(
             df_reviews_filtered,
             Country_name=user_selected_country,
             nation_selected=False)
 
-    # Kullanıcıya otelleri göstermek için bir tablo oluştur
-    recomandations_tab.write(f"Top 10 Hotels for {user_selected_country} - Feedback from {user_selected_nation if user_selected_nation else 'All Nations'}")
+    recomandations_tab.write(
+        f"Top 10 Hotels for {user_selected_country} - Feedback from {user_selected_nation if user_selected_nation else 'All Nations'}")
     recomandations_tab.dataframe(top_hotels, use_container_width=True)
-
-
-
-
-
-
-
-
